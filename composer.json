@@ -1,29 +1,37 @@
 {
-  "name": "lochmueller/custom-shortcut",
-  "type": "typo3-cms-extension",
-  "description": "Add custom shortcut types to the page properties.",
-  "require": {
-    "php": "^7.3||^7.4",
-    "typo3/cms-core": "^9.5||^10.4"
-  },
-  "autoload": {
-    "psr-4": {
-      "HDNET\\CustomShortcut\\": "Classes/"
-    }
-  },
-  "homepage": "https://github.com/lochmueller/custom_shortcut",
-  "license": "GPL-2.0-or-later",
-  "config": {
-    "vendor-dir": ".Build/vendor",
-    "bin-dir": ".Build/bin",
-    "preferred-install": {
-      "*": "dist"
-    }
-  },
-  "extra": {
-    "typo3/cms": {
-      "cms-package-dir": "{$vendor-dir}/typo3/cms",
-      "web-dir": ".Build/Web"
-    }
-  }
+	"name": "lochmueller/custom-shortcut",
+	"type": "typo3-cms-extension",
+	"description": "Add custom shortcut types to the page properties.",
+	"require": {
+		"php": "^7.3||^7.4",
+		"typo3/cms-core": "^9.5||^10.4"
+	},
+	"require-dev": {
+		"friendsofphp/php-cs-fixer": "^2.16"
+	},
+	"autoload": {
+		"psr-4": {
+			"HDNET\\CustomShortcut\\": "Classes/"
+		}
+	},
+	"homepage": "https://github.com/lochmueller/custom_shortcut",
+	"license": "GPL-2.0-or-later",
+	"config": {
+		"vendor-dir": ".Build/vendor",
+		"bin-dir": ".Build/bin",
+		"preferred-install": {
+			"*": "dist"
+		}
+	},
+	"extra": {
+		"typo3/cms": {
+			"cms-package-dir": "{$vendor-dir}/typo3/cms",
+			"web-dir": ".Build/Web"
+		}
+	},
+	"scripts": {
+		"code": [
+			"php-cs-fixer fix --config Resources/Private/Build/PhpCsFixer.php --cache-file=.Build/phpcs.cache"
+		]
+	}
 }
