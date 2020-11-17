@@ -1,5 +1,5 @@
 {
-  "name": "hdnet/custom-shortccut",
+  "name": "lochmueller/custom-shortcut",
   "type": "typo3-cms-extension",
   "description": "Add custom shortcut types to the page properties.",
   "require": {
