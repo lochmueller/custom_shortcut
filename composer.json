@@ -11,7 +11,8 @@
       "HDNET\\CustomShortcut\\": "Classes/"
     }
   },
-  "homepage": "https://www.hdnet.de",
+  "homepage": "https://github.com/lochmueller/custom_shortcut",
+  "license": "GPL-2.0-or-later",
   "config": {
     "vendor-dir": ".Build/vendor",
     "bin-dir": ".Build/bin",
