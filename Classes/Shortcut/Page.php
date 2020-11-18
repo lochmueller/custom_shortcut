@@ -10,4 +10,9 @@ class Page implements ShortcutInterface
     {
         return 'pages';
     }
+
+    public function resolvePageId(int $recordId): int
+    {
+        return $recordId;
+    }
 }

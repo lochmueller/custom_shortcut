@@ -7,7 +7,6 @@ namespace HDNET\CustomShortcut\Upgrade;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
-use TYPO3\CMS\Frontend\Page\PageRepository;
 use TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite;
 use TYPO3\CMS\Install\Updates\UpgradeWizardInterface;
 
@@ -33,7 +32,7 @@ class ShortcutUpgrade implements UpgradeWizardInterface
         $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('pages');
         foreach ($this->getMigrationRecords() as $page) {
             $value = [
-                'shortcut' => 'pages_'.$page['shortcut'],
+                'shortcut' => ((int) $page['shortcut']) ? 'pages_'.$page['shortcut'] : '',
             ];
             if ((int) $connection->update('pages', $value, ['uid' => $page['uid']]) <= 0) {
                 return false;
@@ -57,19 +56,22 @@ class ShortcutUpgrade implements UpgradeWizardInterface
 
     protected function getMigrationRecords(): iterable
     {
+        /** @todo Finish migration */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $where = [
-            $queryBuilder->expr()->eq('doktype', PageRepository::DOKTYPE_SHORTCUT),
+            $queryBuilder->expr()->orX(
+                $queryBuilder->expr()->neq('shortcut', $queryBuilder->quote('')),
+                $queryBuilder->expr()->eq('shortcut', 0)
+            ),
         ];
-        $result = $queryBuilder->select('*')
+        $query = $queryBuilder->select('uid', 'shortcut')
             ->from('pages')
             ->where(...$where)
             ->execute()
-            ->fetchAll()
         ;
 
-        foreach ($result as $page) {
-            if (MathUtility::canBeInterpretedAsInteger($page['shortcut']) && (int) $page['shortcut'] > 0) {
+        while ($page = $query->fetch()) {
+            if (MathUtility::canBeInterpretedAsInteger($page['shortcut'])) {
                 yield $page;
             }
         }

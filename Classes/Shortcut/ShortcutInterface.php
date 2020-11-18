@@ -7,4 +7,6 @@ namespace HDNET\CustomShortcut\Shortcut;
 interface ShortcutInterface
 {
     public function getTableName(): string;
+
+    public function resolvePageId(int $recordId): int;
 }
