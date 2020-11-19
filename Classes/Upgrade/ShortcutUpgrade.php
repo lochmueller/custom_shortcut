@@ -34,6 +34,7 @@ class ShortcutUpgrade implements UpgradeWizardInterface
             $value = [
                 'shortcut' => ((int) $page['shortcut']) ? 'pages_'.$page['shortcut'] : '',
             ];
+
             if ((int) $connection->update('pages', $value, ['uid' => $page['uid']]) <= 0) {
                 return false;
             }
@@ -44,7 +45,11 @@ class ShortcutUpgrade implements UpgradeWizardInterface
 
     public function updateNecessary(): bool
     {
-        return !empty($this->getMigrationRecords());
+        foreach ($this->getMigrationRecords() as $item) {
+            return true;
+        }
+
+        return false;
     }
 
     public function getPrerequisites(): array
@@ -56,13 +61,10 @@ class ShortcutUpgrade implements UpgradeWizardInterface
 
     protected function getMigrationRecords(): iterable
     {
-        /** @todo Finish migration */
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+        $queryBuilder->getRestrictions()->removeAll();
         $where = [
-            $queryBuilder->expr()->orX(
-                $queryBuilder->expr()->neq('shortcut', $queryBuilder->quote('')),
-                $queryBuilder->expr()->eq('shortcut', 0)
-            ),
+            $queryBuilder->expr()->neq('shortcut', $queryBuilder->quote('')),
         ];
         $query = $queryBuilder->select('uid', 'shortcut')
             ->from('pages')
