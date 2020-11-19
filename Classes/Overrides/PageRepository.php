@@ -74,6 +74,8 @@ class PageRepository extends \TYPO3\CMS\Frontend\Page\PageRepository
                 throw new \RuntimeException($message, 1294587212);
             }
         }
+
+        $page['uid'] = 'shortcut://'.$shortcutFieldValue;
         // Return resulting page:
         return $page;
     }
