@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace HDNET\CustomShortcut\Overrides;
 
+use HDNET\CustomShortcut\Utility\HelperUtility;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Error\Http\ShortcutTargetPageNotFoundException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -78,5 +80,36 @@ class PageRepository extends \TYPO3\CMS\Frontend\Page\PageRepository
         $page['uid'] = 'shortcut://'.$shortcutFieldValue;
         // Return resulting page:
         return $page;
+    }
+
+    /**
+     * If shortcut, look up if the target exists and is currently visible.
+     *
+     * @param array  $page                  The page to check
+     * @param string $additionalWhereClause Optional additional where clauses. Like "AND title like '%some text%'" for instance.
+     *
+     * @return array
+     */
+    protected function checkValidShortcutOfPage(array $page, $additionalWhereClause)
+    {
+        if (empty($page)) {
+            return [];
+        }
+
+        $checkShortcut = (string) $page['shortcut'];
+        if ($config = HelperUtility::getTableRecordConfiguration($checkShortcut)) {
+            $integration = HelperUtility::getShortcutHandler($config);
+            $pageUid = $integration->resolvePageId($config->getId());
+            $targetPage = BackendUtility::getRecord('pages', $pageUid);
+
+            $result = parent::checkValidShortcutOfPage($targetPage, $additionalWhereClause);
+            if (empty($result)) {
+                return $result;
+            }
+
+            return $page;
+        }
+
+        return parent::checkValidShortcutOfPage($page, $additionalWhereClause);
     }
 }
