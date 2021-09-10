@@ -102,7 +102,7 @@ class PageRepository extends \TYPO3\CMS\Frontend\Page\PageRepository
             $pageUid = $integration->resolvePageId($config->getId());
             $targetPage = BackendUtility::getRecord('pages', $pageUid);
 
-            $result = parent::checkValidShortcutOfPage($targetPage, $additionalWhereClause);
+            $result = parent::checkValidShortcutOfPage((array)$targetPage, $additionalWhereClause);
             if (empty($result)) {
                 return $result;
             }
