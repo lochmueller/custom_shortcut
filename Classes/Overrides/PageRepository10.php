@@ -76,8 +76,12 @@ class PageRepository10 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 throw new \RuntimeException($message, 1294587212);
             }
         }
-
-        $page['uid'] = 'shortcut://'.$shortcutFieldValue;
+        
+        // Check if a CE anchor is set
+        if (str_contains($shortcutFieldValue,'tt_content')){
+            $page['uid'] .= '#' . preg_replace('/\D/', '', $shortcutFieldValue);
+        }
+        
         // Return resulting page:
         return $page;
     }
