@@ -1,8 +1,5 @@
 <?php
 
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Frontend\Page\PageRepositoryGetPageHookInterface;
-
 $GLOBALS['TYPO3_CONF_VARS']['EXT']['custom_shortcut']['shortcut'] = [
     'tt_content' => \HDNET\CustomShortcut\Shortcut\Content::class,
     'pages' => \HDNET\CustomShortcut\Shortcut\Page::class
