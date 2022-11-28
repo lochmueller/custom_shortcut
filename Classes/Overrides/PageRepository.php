@@ -45,6 +45,7 @@ class PageRepository extends \TYPO3\CMS\Frontend\Page\PageRepository
                 }
 
                 break;
+
             case self::SHORTCUT_MODE_PARENT_PAGE:
                 $parent = $this->getPage($idArray[0] ?: $thisUid, $disableGroupCheck);
                 $page = $this->getPage($parent['pid'], $disableGroupCheck);
@@ -55,6 +56,7 @@ class PageRepository extends \TYPO3\CMS\Frontend\Page\PageRepository
                 }
 
                 break;
+
             default:
                 $page = $this->getPage($idArray[0], $disableGroupCheck);
                 if (empty($page)) {
@@ -102,7 +104,7 @@ class PageRepository extends \TYPO3\CMS\Frontend\Page\PageRepository
             $pageUid = $integration->resolvePageId($config->getId());
             $targetPage = BackendUtility::getRecord('pages', $pageUid);
 
-            $result = parent::checkValidShortcutOfPage((array)$targetPage, $additionalWhereClause);
+            $result = parent::checkValidShortcutOfPage((array) $targetPage, $additionalWhereClause);
             if (empty($result)) {
                 return $result;
             }

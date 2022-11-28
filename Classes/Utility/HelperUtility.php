@@ -26,6 +26,7 @@ class HelperUtility
         $items = (array) $GLOBALS['TYPO3_CONF_VARS']['EXT']['custom_shortcut']['shortcut'];
         foreach ($items as $className) {
             $integration = GeneralUtility::makeInstance($className);
+
             /** @var ShortcutInterface $integration */
             if ($config->getTableName() === $integration->getTableName()) {
                 return $integration;

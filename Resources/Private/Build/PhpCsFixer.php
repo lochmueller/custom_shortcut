@@ -3,15 +3,16 @@
 declare(strict_types=1);
 
 $baseDir = dirname(__DIR__, 3);
+
 require $baseDir.'/.Build/vendor/autoload.php';
 
-$finder = PhpCsFixer\Finder::create()
+$finder = (new PhpCsFixer\Finder())
     ->in($baseDir.'/Classes')
     ->in($baseDir.'/Configuration/TCA')
     ->in($baseDir.'/Resources/Private/Build')
 ;
 
-return PhpCsFixer\Config::create()
+return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setRules([
         '@DoctrineAnnotation' => true,
@@ -21,4 +22,4 @@ return PhpCsFixer\Config::create()
         '@PHP71Migration:risky' => true,
     ])
     ->setFinder($finder)
-    ;
+;

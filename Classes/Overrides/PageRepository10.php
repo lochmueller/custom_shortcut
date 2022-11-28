@@ -45,6 +45,7 @@ class PageRepository10 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 }
 
                 break;
+
             case self::SHORTCUT_MODE_PARENT_PAGE:
                 $parent = $this->getPage($idArray[0] ?: $thisUid, $disableGroupCheck);
                 $page = $this->getPage($parent['pid'], $disableGroupCheck);
@@ -55,6 +56,7 @@ class PageRepository10 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 }
 
                 break;
+
             default:
                 $page = $this->getPage($idArray[0], $disableGroupCheck);
                 if (empty($page)) {
@@ -76,12 +78,12 @@ class PageRepository10 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 throw new \RuntimeException($message, 1294587212);
             }
         }
-        
+
         // Check if a CE anchor is set
-        if (str_contains($shortcutFieldValue,'tt_content')){
-            $page['uid'] .= '#' . preg_replace('/\D/', '', $shortcutFieldValue);
+        if (str_contains($shortcutFieldValue, 'tt_content')) {
+            $page['uid'] .= '#'.preg_replace('/\D/', '', $shortcutFieldValue);
         }
-        
+
         // Return resulting page:
         return $page;
     }
