@@ -22,4 +22,9 @@ $EM_CONF[$_EXTKEY] = [
             'typo3' => '10.4.0-11.5.999',
         ],
     ],
+    'autoload' => [
+        'psr-4' => [
+            'HDNET\\CustomShortcut\\' => 'Classes/',
+        ],
+    ],
 ];
