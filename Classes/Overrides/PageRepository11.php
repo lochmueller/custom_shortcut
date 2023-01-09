@@ -136,4 +136,10 @@ class PageRepository11 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
 
         return parent::checkValidShortcutOfPage($page, $additionalWhereClause);
     }
+
+    public function getMountPointInfo($pageId, $pageRec = false, $prevMountPids = [], $firstPageUid = 0)
+    {
+        // Cast to int to avoid problems in name scheme for caching
+        return parent::getMountPointInfo((int)$pageId, $pageRec, $prevMountPids, $firstPageUid);
+    }
 }
