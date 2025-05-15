@@ -10,7 +10,7 @@ $EM_CONF[$_EXTKEY] = [
     'title' => 'Custom shortcut',
     'description' => 'Add custom shortcut types to the page properties.',
     'category' => 'misc',
-    'version' => '1.0.3',
+    'version' => '2.0.0',
     'dependencies' => 'hdnet',
     'state' => 'stable',
     'author' => 'HDNET GmbH & Co. KG',
@@ -18,8 +18,8 @@ $EM_CONF[$_EXTKEY] = [
     'author_company' => 'hdnet.de',
     'constraints' => [
         'depends' => [
-            'php' => '7.4.0-8.1.999',
-            'typo3' => '10.4.0-11.5.999',
+            'php' => '8.2.0-8.2.999',
+            'typo3' => '11.5.0-12.4.999',
         ],
     ],
     'autoload' => [

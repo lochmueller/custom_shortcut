@@ -10,20 +10,39 @@ use TYPO3\CMS\Core\Error\Http\ShortcutTargetPageNotFoundException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
-class PageRepository10 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
+class PageRepository12 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
 {
-    public function getPageShortcut($shortcutFieldValue, $shortcutMode, $thisUid, $iteration = 20, $pageLog = [], $disableGroupCheck = false)
+    public function getPageShortcut($shortcutFieldValue, $shortcutMode, $thisUid, $iteration = 20, $pageLog = [], $disableGroupCheck = false, bool $resolveRandomPageShortcuts = true)
     {
         if (MathUtility::canBeInterpretedAsInteger($shortcutFieldValue)) {
             return parent::getPageShortcut($shortcutFieldValue, $shortcutMode, $thisUid, $iteration, $pageLog, $disableGroupCheck);
         }
+
         // ---- CHANGE int to trim!!!
         $idArray = GeneralUtility::trimExplode(',', $shortcutFieldValue);
+        if (false === $resolveRandomPageShortcuts && self::SHORTCUT_MODE_RANDOM_SUBPAGE === (int) $shortcutMode) {
+            return [];
+        }
         // Find $page record depending on shortcut mode:
         switch ($shortcutMode) {
             case self::SHORTCUT_MODE_FIRST_SUBPAGE:
             case self::SHORTCUT_MODE_RANDOM_SUBPAGE:
-                $pageArray = $this->getMenu($idArray[0] ?: $thisUid, '*', 'sorting', 'AND pages.doktype<199 AND pages.doktype!='.self::DOKTYPE_BE_USER_SECTION);
+                $excludedDoktypes = [
+                    self::DOKTYPE_SPACER,
+                    self::DOKTYPE_SYSFOLDER,
+                    self::DOKTYPE_RECYCLER,
+                    self::DOKTYPE_BE_USER_SECTION,
+                ];
+                $savedWhereGroupAccess = '';
+                // "getMenu()" does not allow to hand over $disableGroupCheck, for this reason it is manually disabled and re-enabled afterwards.
+                if ($disableGroupCheck) {
+                    $savedWhereGroupAccess = $this->where_groupAccess;
+                    $this->where_groupAccess = '';
+                }
+                $pageArray = $this->getMenu($idArray[0] ?: $thisUid, '*', 'sorting', 'AND pages.doktype NOT IN ('.implode(', ', $excludedDoktypes).')');
+                if ($disableGroupCheck) {
+                    $this->where_groupAccess = $savedWhereGroupAccess;
+                }
                 $pO = 0;
                 if (self::SHORTCUT_MODE_RANDOM_SUBPAGE === $shortcutMode && !empty($pageArray)) {
                     $pO = (int) random_int(0, \count($pageArray) - 1);
@@ -66,16 +85,15 @@ class PageRepository10 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 }
         }
         // Check if short cut page was a shortcut itself, if so look up recursively:
-        if (self::DOKTYPE_SHORTCUT === $page['doktype']) {
+        if (self::DOKTYPE_SHORTCUT === (int) $page['doktype']) {
             if (!\in_array($page['uid'], $pageLog, true) && $iteration > 0) {
                 $pageLog[] = $page['uid'];
                 $page = $this->getPageShortcut($page['shortcut'], $page['shortcut_mode'], $page['uid'], $iteration - 1, $pageLog, $disableGroupCheck);
             } else {
                 $pageLog[] = $page['uid'];
-                $message = 'Page shortcuts were looping in uids '.implode(',', $pageLog).'...!';
-                $this->logger->error($message);
+                $this->logger->error('Page shortcuts were looping in uids {uids}', ['uids' => implode(', ', array_values($pageLog))]);
 
-                throw new \RuntimeException($message, 1294587212);
+                throw new \RuntimeException('Page shortcuts were looping in uids: '.implode(', ', array_values($pageLog)), 1294587212);
             }
         }
 
