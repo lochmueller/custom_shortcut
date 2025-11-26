@@ -22,6 +22,11 @@ class Page implements ShortcutInterface
     {
         $id = (int) str_replace($this->getTableName().'_', '', $target);
 
+        $versionGreaterEquals13 = \TYPO3\CMS\Core\Utility\VersionNumberUtility::convertVersionNumberToInteger(\TYPO3\CMS\Core\Utility\VersionNumberUtility::getNumericTypo3Version()) >= \TYPO3\CMS\Core\Utility\VersionNumberUtility::convertVersionNumberToInteger('13.0');
+        if($versionGreaterEquals13) {
+            return $contentObjectRenderer->typoLink_URL(['parameter' => $id]);
+        }
+
         return $contentObjectRenderer->getTypoLink_URL($id);
     }
 }
