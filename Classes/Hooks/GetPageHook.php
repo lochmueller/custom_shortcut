@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace HDNET\CustomShortcut\Hooks;
 
 use HDNET\CustomShortcut\Utility\HelperUtility;
-use TYPO3\CMS\Frontend\Page\PageRepository;
-use TYPO3\CMS\Frontend\Page\PageRepositoryGetPageHookInterface;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Domain\Repository\PageRepositoryGetPageHookInterface;
 
 class GetPageHook implements PageRepositoryGetPageHookInterface
 {

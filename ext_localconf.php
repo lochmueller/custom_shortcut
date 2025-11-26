@@ -1,6 +1,6 @@
 <?php
 
-use HDNET\CustomShortcut\Hooks\GetPageHook10;
+use HDNET\CustomShortcut\Hooks\GetPageHook;
 use HDNET\CustomShortcut\Overrides\PageRepository11;
 use HDNET\CustomShortcut\Overrides\PageRepository12;
 use HDNET\CustomShortcut\Overrides\PageRepository13;
@@ -18,25 +18,18 @@ $GLOBALS['TYPO3_CONF_VARS']['EXT']['custom_shortcut']['shortcut'] = [
 
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/install']['update'][ShortcutUpgrade::class] = ShortcutUpgrade::class;
 
-$versionGreaterEquals12 = VersionNumberUtility::convertVersionNumberToInteger(VersionNumberUtility::getNumericTypo3Version()) >= VersionNumberUtility::convertVersionNumberToInteger('12.0');
-$versionGreaterEquals13 = VersionNumberUtility::convertVersionNumberToInteger(VersionNumberUtility::getNumericTypo3Version()) >= VersionNumberUtility::convertVersionNumberToInteger('13.0');
+$currentVersion = VersionNumberUtility::convertVersionNumberToInteger(VersionNumberUtility::getNumericTypo3Version());
 
-if($versionGreaterEquals13) {
-    $GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][PageRepository::class] = [
-        'className' => PageRepository13::class,
-    ];
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'][] = GetPageHook10::class;
-} else if($versionGreaterEquals12) {
-    $GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][PageRepository::class] = [
-        'className' => PageRepository12::class,
-    ];
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'][] = GetPageHook10::class;
-} else {
-    $GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][PageRepository::class] = [
-        'className' => PageRepository11::class,
-    ];
-    $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'][] = GetPageHook10::class;
+$extendedClassName = PageRepository11::class;
+if($currentVersion >= VersionNumberUtility::convertVersionNumberToInteger('13.0')) {
+    $extendedClassName = PageRepository13::class;
+} else if($currentVersion >= VersionNumberUtility::convertVersionNumberToInteger('12.0')) {
+    $extendedClassName = PageRepository12::class;
 }
 
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects'][PageRepository::class] = [
+    'className' => $extendedClassName,
+];
 
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_page.php']['getPage'][] = GetPageHook::class;
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_content.php']['typolinkLinkHandler']['shortcut'] = ShortcutLinkHandler::class;
