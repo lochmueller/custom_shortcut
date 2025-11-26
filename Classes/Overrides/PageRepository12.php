@@ -6,11 +6,12 @@ namespace HDNET\CustomShortcut\Overrides;
 
 use HDNET\CustomShortcut\Utility\HelperUtility;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use TYPO3\CMS\Core\Error\Http\ShortcutTargetPageNotFoundException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
-class PageRepository12 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
+class PageRepository12 extends PageRepository
 {
     public function getPageShortcut($shortcutFieldValue, $shortcutMode, $thisUid, $iteration = 20, $pageLog = [], $disableGroupCheck = false, bool $resolveRandomPageShortcuts = true)
     {
@@ -23,6 +24,7 @@ class PageRepository12 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
         if (false === $resolveRandomPageShortcuts && self::SHORTCUT_MODE_RANDOM_SUBPAGE === (int) $shortcutMode) {
             return [];
         }
+
         // Find $page record depending on shortcut mode:
         switch ($shortcutMode) {
             case self::SHORTCUT_MODE_FIRST_SUBPAGE:
@@ -106,6 +108,12 @@ class PageRepository12 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
         return $page;
     }
 
+    public function getMountPointInfo($pageId, $pageRec = false, $prevMountPids = [], $firstPageUid = 0)
+    {
+        // Cast to int to avoid problems in name scheme for caching
+        return parent::getMountPointInfo((int) $pageId, $pageRec, $prevMountPids, $firstPageUid);
+    }
+
     /**
      * If shortcut, look up if the target exists and is currently visible.
      *
@@ -135,11 +143,5 @@ class PageRepository12 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
         }
 
         return parent::checkValidShortcutOfPage($page, $additionalWhereClause);
-    }
-
-    public function getMountPointInfo($pageId, $pageRec = false, $prevMountPids = [], $firstPageUid = 0)
-    {
-        // Cast to int to avoid problems in name scheme for caching
-        return parent::getMountPointInfo((int)$pageId, $pageRec, $prevMountPids, $firstPageUid);
     }
 }

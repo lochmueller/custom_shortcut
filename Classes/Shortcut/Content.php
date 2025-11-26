@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HDNET\CustomShortcut\Shortcut;
 
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 class Content implements ShortcutInterface
@@ -27,9 +28,9 @@ class Content implements ShortcutInterface
 
         $record = BackendUtility::getRecord($this->getTableName(), $id);
 
-        $versionGreaterEquals13 = \TYPO3\CMS\Core\Utility\VersionNumberUtility::convertVersionNumberToInteger(\TYPO3\CMS\Core\Utility\VersionNumberUtility::getNumericTypo3Version()) >= \TYPO3\CMS\Core\Utility\VersionNumberUtility::convertVersionNumberToInteger('13.0');
-        if($versionGreaterEquals13) {
-            return $contentObjectRenderer->typoLink_URL(['parameter' => $record['pid'], 'section' => 'c'. $id]);
+        $versionGreaterEquals13 = VersionNumberUtility::convertVersionNumberToInteger(VersionNumberUtility::getNumericTypo3Version()) >= VersionNumberUtility::convertVersionNumberToInteger('13.0');
+        if ($versionGreaterEquals13) {
+            return $contentObjectRenderer->typoLink_URL(['parameter' => $record['pid'], 'section' => 'c'.$id]);
         }
 
         return $contentObjectRenderer->getTypoLink_URL($record['pid']).'#c'.$id;
