@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 namespace HDNET\CustomShortcut\Overrides;
 
+use Doctrine\DBAL\Exception;
 use HDNET\CustomShortcut\Utility\HelperUtility;
+use Random\RandomException;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\Connection;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Error\Http\ShortcutTargetPageNotFoundException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
 class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
 {
+    /**
+     * @throws RandomException
+     * @throws ShortcutTargetPageNotFoundException
+     * @throws Exception
+     */
     public function getPageShortcut($shortcutFieldValue, $shortcutMode, $thisUid, $iteration = 20, $pageLog = [], $disableGroupCheck = false, bool $resolveRandomPageShortcuts = true)
     {
         // strip 'pages_' prefix if present
@@ -23,9 +32,10 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
 
         // ---- CHANGE int to trim!!!
         $idArray = GeneralUtility::trimExplode(',', $shortcutFieldValue);
-        if (false === $resolveRandomPageShortcuts && self::SHORTCUT_MODE_RANDOM_SUBPAGE === (int) $shortcutMode) {
+        if (false === $resolveRandomPageShortcuts && self::SHORTCUT_MODE_RANDOM_SUBPAGE === (int)$shortcutMode) {
             return [];
         }
+
         // Find $page record depending on shortcut mode:
         switch ($shortcutMode) {
             case self::SHORTCUT_MODE_FIRST_SUBPAGE:
@@ -33,7 +43,6 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 $excludedDoktypes = [
                     self::DOKTYPE_SPACER,
                     self::DOKTYPE_SYSFOLDER,
-                    self::DOKTYPE_RECYCLER,
                     self::DOKTYPE_BE_USER_SECTION,
                 ];
                 $savedWhereGroupAccess = '';
@@ -42,13 +51,13 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                     $savedWhereGroupAccess = $this->where_groupAccess;
                     $this->where_groupAccess = '';
                 }
-                $pageArray = $this->getMenu($idArray[0] ?: $thisUid, '*', 'sorting', 'AND pages.doktype NOT IN ('.implode(', ', $excludedDoktypes).')');
+                $pageArray = $this->getMenu($idArray[0] ?: $thisUid, '*', 'sorting', 'AND pages.doktype NOT IN (' . implode(', ', $excludedDoktypes) . ')');
                 if ($disableGroupCheck) {
                     $this->where_groupAccess = $savedWhereGroupAccess;
                 }
                 $pO = 0;
                 if (self::SHORTCUT_MODE_RANDOM_SUBPAGE === $shortcutMode && !empty($pageArray)) {
-                    $pO = (int) random_int(0, \count($pageArray) - 1);
+                    $pO = (int)random_int(0, \count($pageArray) - 1);
                 }
                 $c = 0;
                 $page = [];
@@ -61,7 +70,7 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                     ++$c;
                 }
                 if (empty($page)) {
-                    $message = 'This page (ID '.$thisUid.') is of type "Shortcut" and configured to redirect to a subpage. However, this page has no accessible subpages.';
+                    $message = 'This page (ID ' . $thisUid . ') is of type "Shortcut" and configured to redirect to a subpage. However, this page has no accessible subpages.';
 
                     throw new ShortcutTargetPageNotFoundException($message, 1301648328);
                 }
@@ -72,7 +81,7 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 $parent = $this->getPage($idArray[0] ?: $thisUid, $disableGroupCheck);
                 $page = $this->getPage($parent['pid'], $disableGroupCheck);
                 if (empty($page)) {
-                    $message = 'This page (ID '.$thisUid.') is of type "Shortcut" and configured to redirect to its parent page. However, the parent page is not accessible.';
+                    $message = 'This page (ID ' . $thisUid . ') is of type "Shortcut" and configured to redirect to its parent page. However, the parent page is not accessible.';
 
                     throw new ShortcutTargetPageNotFoundException($message, 1301648358);
                 }
@@ -80,15 +89,16 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 break;
 
             default:
-                $page = $this->getPage($idArray[0], $disableGroupCheck);
+                $pageUid = $this->resolveShortcutTargetPageId($idArray[0]);
+                $page = $this->getPage($pageUid, $disableGroupCheck);
                 if (empty($page)) {
-                    $message = 'This page (ID '.$thisUid.') is of type "Shortcut" and configured to redirect to a page, which is not accessible (ID '.$idArray[0].').';
+                    $message = 'This page (ID ' . $thisUid . ') is of type "Shortcut" and configured to redirect to a page, which is not accessible (ID ' . $idArray[0] . ').';
 
                     throw new ShortcutTargetPageNotFoundException($message, 1301648404);
                 }
         }
         // Check if short cut page was a shortcut itself, if so look up recursively:
-        if (self::DOKTYPE_SHORTCUT === (int) $page['doktype']) {
+        if (self::DOKTYPE_SHORTCUT === (int)$page['doktype']) {
             if (!\in_array($page['uid'], $pageLog, true) && $iteration > 0) {
                 $pageLog[] = $page['uid'];
                 $page = $this->getPageShortcut($page['shortcut'], $page['shortcut_mode'], $page['uid'], $iteration - 1, $pageLog, $disableGroupCheck);
@@ -96,17 +106,53 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
                 $pageLog[] = $page['uid'];
                 $this->logger->error('Page shortcuts were looping in uids {uids}', ['uids' => implode(', ', array_values($pageLog))]);
 
-                throw new \RuntimeException('Page shortcuts were looping in uids: '.implode(', ', array_values($pageLog)), 1294587212);
+                throw new \RuntimeException('Page shortcuts were looping in uids: ' . implode(', ', array_values($pageLog)), 1294587212);
             }
         }
 
         // Check if a CE anchor is set
         if (str_contains($shortcutFieldValue, 'tt_content')) {
-            $page['uid'] .= '#'.preg_replace('/\D/', '', $shortcutFieldValue);
+            $page['uid'] .= '#' . preg_replace('/\D/', '', $shortcutFieldValue);
         }
 
         // Return resulting page:
         return $page;
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function resolveShortcutTargetPageId($shortcutFieldValue): int
+    {
+        if (!preg_match('/^tt_content_(\d+)$/', $shortcutFieldValue, $matches)) {
+            return $shortcutFieldValue;
+        }
+
+        $contentUid = (int)$matches[1];
+
+        /** @var ConnectionPool $connectionPool */
+        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        $queryBuilder = $connectionPool
+            ->getQueryBuilderForTable('tt_content');
+
+        $row = $queryBuilder
+            ->select('pid')
+            ->from('tt_content')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'uid',
+                    $queryBuilder->createNamedParameter($contentUid, Connection::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    'deleted',
+                    $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
+                )
+            )
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        return $row['pid'] ?? 0;
     }
 
     /**
@@ -123,7 +169,7 @@ class PageRepository13 extends \TYPO3\CMS\Core\Domain\Repository\PageRepository
             return [];
         }
 
-        $checkShortcut = (string) $page['shortcut'];
+        $checkShortcut = (string)$page['shortcut'];
         if ($config = HelperUtility::getTableRecordConfiguration($checkShortcut)) {
             $integration = HelperUtility::getShortcutHandler($config);
             $pageUid = $integration->resolvePageId($config->getId());
