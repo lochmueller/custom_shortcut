@@ -4,7 +4,8 @@
 	"description": "Add custom shortcut types to the page properties.",
 	"require": {
 		"php": "^8.2",
-		"typo3/cms-core": "^11.4||^12.4||^13.4"
+		"typo3/cms-core": "^11.4||^12.4||^13.4",
+		"typo3/cms-backend": "^11.4||^12.4||^13.4"
 	},
 	"require-dev": {
 		"friendsofphp/php-cs-fixer": "^3.13"
@@ -35,7 +36,7 @@
 		}
 	},
 	"scripts": {
-		"code": [
+		"code-fix": [
 			"php-cs-fixer fix --config Resources/Private/Build/PhpCsFixer.php --cache-file=.Build/phpcs.cache"
 		]
 	}

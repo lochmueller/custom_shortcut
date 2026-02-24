@@ -15,8 +15,17 @@ class PageRepository13 extends PageRepository
 {
     public function getPageShortcut($shortcutFieldValue, $shortcutMode, $thisUid, $iteration = 20, $pageLog = [], $disableGroupCheck = false, bool $resolveRandomPageShortcuts = true)
     {
-        // strip 'pages_' prefix if present
-        $shortcutFieldValue = str_replace('pages_', '', $shortcutFieldValue);
+        if (!$shortcutFieldValue) {
+            return [];
+        }
+
+        [$recordTable, $recordUid] = BackendUtility::splitTable_Uid($shortcutFieldValue);
+        if ('pages' === $recordTable) {
+            $shortcutFieldValue = (string) $recordUid;
+        } elseif ('tt_content' === $recordTable) {
+            $recordPid = BackendUtility::getRecord($recordTable, $recordUid, 'pid');
+            $shortcutFieldValue = (string) $recordPid['pid'];
+        }
 
         if (MathUtility::canBeInterpretedAsInteger($shortcutFieldValue)) {
             return parent::getPageShortcut($shortcutFieldValue, $shortcutMode, $thisUid, $iteration, $pageLog, $disableGroupCheck);
@@ -35,7 +44,6 @@ class PageRepository13 extends PageRepository
                 $excludedDoktypes = [
                     self::DOKTYPE_SPACER,
                     self::DOKTYPE_SYSFOLDER,
-                    self::DOKTYPE_RECYCLER,
                     self::DOKTYPE_BE_USER_SECTION,
                 ];
                 $savedWhereGroupAccess = '';
@@ -82,7 +90,7 @@ class PageRepository13 extends PageRepository
                 break;
 
             default:
-                $page = $this->getPage($idArray[0], $disableGroupCheck);
+                $page = $this->getPage((int) $idArray[0], $disableGroupCheck);
                 if (empty($page)) {
                     $message = 'This page (ID '.$thisUid.') is of type "Shortcut" and configured to redirect to a page, which is not accessible (ID '.$idArray[0].').';
 
