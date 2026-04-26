@@ -43,8 +43,11 @@ class CustomShortcutMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
+        $contentObjectRenderer = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+        $contentObjectRenderer->setRequest($request);
+
         $handler = HelperUtility::getShortcutHandler($config);
-        $uri = $handler->resolveUrl($pageRecord['shortcut'], GeneralUtility::makeInstance(ContentObjectRenderer::class));
+        $uri = $handler->resolveUrl($pageRecord['shortcut'], $contentObjectRenderer);
 
         return new RedirectResponse($uri, 307);
     }
